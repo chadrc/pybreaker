@@ -49,35 +49,37 @@ def make_vector2(x, y, d=None):
     return o
 
 
-def make_rect(x, y, w, h, d=None):
+def make_rect(x, y, w, h, color=Color.black(), d=None):
     if d is None:
-        o = dict(x=x, y=y, width=w, height=h)
+        o = dict(x=x, y=y, width=w, height=h, color=color)
     else:
         o = d
         o['x'] = x
         o['y'] = y
         o['width'] = w
         o['height'] = h
+        o['color'] = color
     return o
 
 
-def make_circle(x, y, r, d=None):
+def make_circle(x, y, r, color=Color.black(), d=None):
     if d is None:
-        o = dict(x=x, y=y, radius=r)
+        o = dict(x=x, y=y, radius=r, color=color)
     else:
         o = d
         o['x'] = x
         o['y'] = y
         o['radius'] = r
+        o['color'] = color
     return o
 
 
 def draw_rect(o):
-    pygame.draw.rect(screen, Color.red(), (int(o['x']), int(o['y']), int(o['width']), int(o['height'])))
+    pygame.draw.rect(screen, o['color'], (int(o['x']), int(o['y']), int(o['width']), int(o['height'])))
 
 
 def draw_circle(o):
-    pygame.draw.circle(screen, Color.blue(), (int(o['x']), int(o['y'])), int(o['radius']))
+    pygame.draw.circle(screen, o['color'], (int(o['x']), int(o['y'])), int(o['radius']))
 
 
 def rect_circle_are_touching(r, c):
@@ -92,7 +94,7 @@ def rect_circle_are_touching(r, c):
         elif c['y'] > r['y'] + r['height']:
             normal = make_vector2(0, 1)
         else:
-            normal = make_vector2(0,0)
+            normal = make_vector2(0, 0)
         return True, normal
     return False, None
 
@@ -123,8 +125,8 @@ def hit_test_ball(b):
         ball_direction = vector2_normalize(ball_direction)
 
 
-paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25)
-ball = make_circle(GameWidth/2, GameHeight/2, 10)
+paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25, Color.red())
+ball = make_circle(GameWidth/2, GameHeight/2, 10, Color.blue())
 
 paddle_speed = 200.0
 paddle_direction = 0
@@ -156,6 +158,8 @@ while True:
 
     draw_rect(paddle)
     draw_circle(ball)
+    for b in bound_rects:
+        draw_rect(b)
 
     paddle['x'] += paddle_direction * delta_time * paddle_speed
 
