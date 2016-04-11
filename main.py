@@ -79,6 +79,14 @@ def draw_circle(o):
     pygame.draw.circle(screen, Color.blue(), (int(o['x']), int(o['y'])), int(o['radius']))
 
 
+def rect_circle_are_touching(r, c):
+    if c['x'] + c['radius'] > r['x'] and c['y'] + c['radius'] > r['y'] \
+            and c['x'] - c['radius'] < r['x'] + r['width'] and c['y'] - c['radius'] < r['y'] + r['height']:
+        return True
+
+    return False
+
+
 paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25)
 ball = make_circle(GameWidth/2, GameHeight/2, 10)
 
@@ -103,6 +111,9 @@ while True:
 
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
     ball['y'] += ball_direction['y'] * delta_time * ball_speed
+
+    if rect_circle_are_touching(paddle, ball):
+        print('hit')
 
     for event in pygame.event.get():
         if event.type == QUIT:
