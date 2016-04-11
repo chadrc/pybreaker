@@ -1,4 +1,5 @@
 import sys
+import math
 import pygame
 from pygame.locals import *
 
@@ -82,21 +83,68 @@ def draw_circle(o):
 def rect_circle_are_touching(r, c):
     if c['x'] + c['radius'] > r['x'] and c['y'] + c['radius'] > r['y'] \
             and c['x'] - c['radius'] < r['x'] + r['width'] and c['y'] - c['radius'] < r['y'] + r['height']:
-        return True
+        if c['x'] < r['x']:
+            normal = make_vector2(-1, 0)
+        elif c['x'] > r['x'] + r['width']:
+            normal = make_vector2(1, 0)
+        elif c['y'] < r['y']:
+            normal = make_vector2(0, -1)
+        elif c['y'] > r['y'] + r['height']:
+            normal = make_vector2(0, 1)
+        else:
+            normal = make_vector2(0,0)
+        return True, normal
+    return False, None
 
-    return False
+
+def vector2_difference(v1, v2):
+    return make_vector2(v1['x']-v2['x'], v1['y']-v2['y'])
+
+
+def vector2_add(v1, v2):
+    return make_vector2(v1['x']+v2['x'], v1['y']+v2['y'])
+
+
+def vector2_magnitude(v):
+    return math.sqrt(v['x']*v['x'] + v['y']*v['y'])
+
+
+def vector2_normalize(v):
+    magnitude = vector2_magnitude(v)
+    return make_vector2(v['x']/magnitude, v['y']/magnitude)
+
+
+def hit_test_ball(b):
+    global ball_direction
+    hit = rect_circle_are_touching(b, ball)
+    if hit[0]:
+        ball_direction['x'] += hit[1]['x']*2 + paddle_direction
+        ball_direction['y'] += hit[1]['y']*2
+        ball_direction = vector2_normalize(ball_direction)
 
 
 paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25)
 ball = make_circle(GameWidth/2, GameHeight/2, 10)
 
+paddle_speed = 200.0
+paddle_direction = 0
 ball_direction = make_vector2(0, 1)
-ball_speed = 50.0
+ball_speed = 200.0
+
+left_down = False
+right_down = False
 
 input_timer = float(0)
 previous_time = 0
 delta_time = float(0)
 frame_count = 0
+
+# Bounds
+top_rect = make_rect(0, 0, GameWidth, 10)
+left_rect = make_rect(0, 0, 10, GameHeight)
+right_rect = make_rect(GameWidth - 10, 0, 10, GameHeight)
+
+bound_rects = [top_rect, left_rect, right_rect]
 
 # Game Loop
 while True:
@@ -109,16 +157,34 @@ while True:
     draw_rect(paddle)
     draw_circle(ball)
 
+    paddle['x'] += paddle_direction * delta_time * paddle_speed
+
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
     ball['y'] += ball_direction['y'] * delta_time * ball_speed
 
-    if rect_circle_are_touching(paddle, ball):
-        print('hit')
+    for b in bound_rects:
+        hit_test_ball(b)
+
+    hit_test_ball(paddle)
 
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == KEYDOWN:
+            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                paddle_direction = 1
+                right_down = True
+            elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                paddle_direction = -1
+                left_down = True
+        elif event.type == KEYUP:
+            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                paddle_direction = 0 if not left_down else -1
+                right_down = False
+            elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                paddle_direction = 0 if not right_down else 1
+                left_down = False
 
     pygame.display.update()
     clock.tick(FPS)
