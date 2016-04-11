@@ -113,6 +113,8 @@ def vector2_magnitude(v):
 
 def vector2_normalize(v):
     magnitude = vector2_magnitude(v)
+    if magnitude == 0:
+        return make_vector2(0, 0)
     return make_vector2(v['x']/magnitude, v['y']/magnitude)
 
 
@@ -120,9 +122,11 @@ def hit_test_ball(b):
     global ball_direction
     hit = rect_circle_are_touching(b, ball)
     if hit[0]:
-        ball_direction['x'] += hit[1]['x']*2 + paddle_direction
-        ball_direction['y'] += hit[1]['y']*2
+        ball_direction['x'] += ball_direction['x'] * hit[1]['x'] * 2 * -hit[1]['x']
+        ball_direction['y'] += ball_direction['y'] * hit[1]['y'] * 2 * -hit[1]['y']
         ball_direction = vector2_normalize(ball_direction)
+        return True
+    return False
 
 
 paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25, Color.red())
@@ -148,6 +152,26 @@ right_rect = make_rect(GameWidth - 10, 0, 10, GameHeight)
 
 bound_rects = [top_rect, left_rect, right_rect]
 
+hittable_list = []
+
+hittable_columns = 5
+hittable_rows = 5
+hittable_width = 75
+hittable_height = 25
+hittable_margin = 10
+
+start_y = 100
+start_x = GameWidth/2 - (hittable_columns * (hittable_width + hittable_margin))/2
+
+for i in range(hittable_columns):
+    for j in range(hittable_rows):
+        r = make_rect(start_x + i * (hittable_width + hittable_margin),
+                      start_y + j * (hittable_height + hittable_margin),
+                      hittable_width,
+                      hittable_height,
+                      Color.red())
+        hittable_list.append(r)
+
 # Game Loop
 while True:
     frame_count += 1
@@ -158,6 +182,10 @@ while True:
 
     draw_rect(paddle)
     draw_circle(ball)
+
+    for h in hittable_list:
+        draw_rect(h)
+
     for b in bound_rects:
         draw_rect(b)
 
@@ -169,7 +197,17 @@ while True:
     for b in bound_rects:
         hit_test_ball(b)
 
-    hit_test_ball(paddle)
+    delete_list = []
+    for h in hittable_list:
+        if hit_test_ball(h):
+            delete_list.append(h)
+
+    for d in delete_list:
+        hittable_list.remove(d)
+
+    if hit_test_ball(paddle):
+        ball_direction['x'] += paddle_direction
+        ball_direction = vector2_normalize(ball_direction)
 
     for event in pygame.event.get():
         if event.type == QUIT:
