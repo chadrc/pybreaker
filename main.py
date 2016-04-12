@@ -227,9 +227,14 @@ while True:
 
     if ball_count <= 0:
         render_text("Game Over", GameWidth/2, GameHeight/2, Color.black())
+        render_text("Press 'r' to restart", GameWidth/2, GameHeight/2 + 50, Color.black())
 
     if len(hittable_list) == 0:
         render_text("You Won!", GameWidth/2, GameHeight/2, Color.black())
+        render_text("Press 'r' to restart", GameWidth/2, GameHeight/2 + 50, Color.black())
+
+    if ball_direction['x'] == 0 and ball_direction['y'] == 0:
+        render_text("Press 'space' to launch the ball", GameWidth/2, GameHeight/2 + 50, Color.black())
 
     new_paddle_x = paddle['x'] + paddle_direction * delta_time * paddle_speed
     if 30 < new_paddle_x and new_paddle_x + paddle['width'] < GameWidth-30:
@@ -259,6 +264,8 @@ while True:
     if hit_test_ball(paddle):
         ball_direction['x'] += paddle_direction
         ball_direction = vector2_normalize(ball_direction)
+        ball['x'] += ball_direction['x'] * delta_time * ball_speed
+        ball['y'] += ball_direction['y'] * delta_time * ball_speed
 
     for event in pygame.event.get():
         if event.type == QUIT:
