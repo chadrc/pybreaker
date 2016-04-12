@@ -157,10 +157,10 @@ def vector2_magnitude(v):
 
 
 def vector2_normalize(v):
-    """
+    """ Normalize a dictionary vector.
 
-    :param v:
-    :return:
+    :param v: (dict) Vector dictionary.
+    :return: Normalized vector of the given one.
     """
 
     magnitude = vector2_magnitude(v)
@@ -170,10 +170,10 @@ def vector2_normalize(v):
 
 
 def hit_test_ball(b):
-    """
+    """ Check if a rect is hitting a ball.
 
-    :param b:
-    :return:
+    :param b: Rect to check for intersection.
+    :return: True if ball collides with rect, False otherwise.
     """
 
     global ball_direction
@@ -187,10 +187,12 @@ def hit_test_ball(b):
 
 
 def damage_hittable_block(b):
-    """
+    """ Damage a block.
 
-    :param b:
-    :return:
+    Determines blocks health by its color. Block health goes red->blue->green. After green block is dead.
+
+    :param b: Block to damage.
+    :return: True if block is dead, False otherwise.
     """
 
     if b['color'] == Color.red():
@@ -248,6 +250,8 @@ def generate_blocks():
 
     return list
 
+
+# Game Setup and Global variables
 main_font = pygame.font.SysFont(None, 40)
 ball_radius = 10
 ball_start_pos = make_vector2(GameWidth/2, GameHeight/2)
@@ -266,7 +270,6 @@ right_down = False
 input_timer = float(0)
 previous_time = 0
 delta_time = float(0)
-frame_count = 0
 
 # Bounds
 top_rect = make_rect(0, 0, GameWidth, 30)
@@ -283,7 +286,6 @@ round_time = 0.0
 
 # Game Loop
 while True:
-    frame_count += 1
     delta_time = (pygame.time.get_ticks() - previous_time) / float(1000)
     previous_time = pygame.time.get_ticks()
 
@@ -301,15 +303,16 @@ while True:
     for b in bound_rects:
         draw_rect(b)
 
+    # Round time calculations and UI
     seconds = int(round_time)
     min = seconds/60
     seconds %= 60
-
     seconds_str = str(seconds)
     if seconds < 10:
         seconds_str = '0' + seconds_str
     render_text(str(min) + ':' + seconds_str, GameWidth - 100, 18, Color.white())
 
+    # Remaining balls UI
     ball_ui_x = 45
     ball_ui_y = 15
     ball_diameter = ball_radius * 2
@@ -317,14 +320,17 @@ while True:
         pygame.draw.circle(screen, Color.white(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius+2)
         pygame.draw.circle(screen, Color.blue(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius)
 
+    # Game Over UI
     if ball_count <= 0:
         render_text("Game Over", GameWidth/2, GameHeight/2, Color.black())
         render_text("Press 'r' to restart", GameWidth/2, GameHeight/2 + 50, Color.black())
 
+    # Victory UI
     if len(hittable_list) == 0:
         render_text("You Won!", GameWidth/2, GameHeight/2, Color.black())
         render_text("Press 'r' to restart", GameWidth/2, GameHeight/2 + 50, Color.black())
 
+    # Instruction UI
     if ball_direction['x'] == 0 and ball_direction['y'] == 0:
         render_text("Press 'space' to launch the ball", GameWidth/2, GameHeight/2 + 50, Color.black())
 
@@ -332,9 +338,11 @@ while True:
     if 30 < new_paddle_x and new_paddle_x + paddle['width'] < GameWidth-30:
         paddle['x'] = new_paddle_x
 
+    # Move Ball
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
     ball['y'] += ball_direction['y'] * delta_time * ball_speed
 
+    # Check if ball is of screen
     if ball['y'] >= GameHeight or ball['y'] < 0 or ball['x'] > GameWidth or ball['x'] < 0:
         ball_count -= 1
         if ball_count > 0:
@@ -342,9 +350,12 @@ while True:
             ball['y'] = ball_start_pos['y']
             ball_direction = make_vector2(0, 0)
 
+    # Check for ball collision with walls
     for b in bound_rects:
         hit_test_ball(b)
 
+    # Check for ball collision with block
+    # Damage block and delete after three hits
     delete_list = []
     for h in hittable_list:
         if hit_test_ball(h) and damage_hittable_block(h):
@@ -353,33 +364,41 @@ while True:
     for d in delete_list:
         hittable_list.remove(d)
 
+    # Check for ball collision with paddle
     if hit_test_ball(paddle):
         ball_direction['x'] += paddle_direction
         ball_direction = vector2_normalize(ball_direction)
         ball['x'] += ball_direction['x'] * delta_time * ball_speed
         ball['y'] += ball_direction['y'] * delta_time * ball_speed
 
+    # Event Check
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
         elif event.type == KEYDOWN:
             if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                # Move paddle right
                 paddle_direction = 1
                 right_down = True
             elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                # Move paddle left
                 paddle_direction = -1
                 left_down = True
         elif event.type == KEYUP:
             if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                # Stop moving paddle right; if left down move left
                 paddle_direction = 0 if not left_down else -1
                 right_down = False
             elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                # Stop moving paddle left; if right down move right
                 paddle_direction = 0 if not right_down else 1
                 left_down = False
             elif event.key == pygame.K_SPACE and ball_direction['x'] == 0 and ball_direction['y'] == 0:
+                # Launch ball
                 ball_direction['y'] = 1
             elif event.key == pygame.K_r:  # and (ball_count <= 0 or len(hittable_list) == 0):
+                # Reset all game values
                 ball_count = 3
                 ball['x'] = ball_start_pos['x']
                 ball['y'] = ball_start_pos['y']
