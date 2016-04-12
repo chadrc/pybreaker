@@ -201,6 +201,8 @@ ball_count = 3
 
 hittable_list = generate_blocks()
 
+round_time = 0.0
+
 # Game Loop
 while True:
     frame_count += 1
@@ -208,6 +210,9 @@ while True:
     previous_time = pygame.time.get_ticks()
 
     screen.fill(Color.white())
+
+    if not (ball_count <= 0 or len(hittable_list) == 0):
+        round_time += delta_time
 
     draw_rect(paddle)
     draw_circle(ball)
@@ -217,6 +222,15 @@ while True:
 
     for b in bound_rects:
         draw_rect(b)
+
+    seconds = int(round_time)
+    min = seconds/60
+    seconds %= 60
+
+    seconds_str = str(seconds)
+    if seconds < 10:
+        seconds_str = '0' + seconds_str
+    render_text(str(min) + ':' + seconds_str, GameWidth - 100, 18, Color.white())
 
     ball_ui_x = 45
     ball_ui_y = 15
@@ -287,7 +301,7 @@ while True:
                 left_down = False
             elif event.key == pygame.K_SPACE and ball_direction['x'] == 0 and ball_direction['y'] == 0:
                 ball_direction['y'] = 1
-            elif event.key == pygame.K_r and (ball_count <= 0 or len(hittable_list) == 0):
+            elif event.key == pygame.K_r:  # and (ball_count <= 0 or len(hittable_list) == 0):
                 ball_count = 3
                 ball['x'] = ball_start_pos['x']
                 ball['y'] = ball_start_pos['y']
@@ -295,6 +309,7 @@ while True:
                 paddle['x'] = paddle_start_pos['x']
                 paddle['y'] = paddle_start_pos['y']
                 hittable_list = generate_blocks()
+                round_time = 0
 
     pygame.display.update()
     clock.tick(FPS)
