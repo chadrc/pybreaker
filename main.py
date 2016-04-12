@@ -39,50 +39,75 @@ class Color(object):
         return 0, 0, 255
 
 
-def make_vector2(x, y, d=None):
-    o = d
-    if d is None:
-        o = dict(x=x, y=y)
-    else:
-        o['x'] = x
-        o['y'] = y
-    return o
+def make_vector2(x, y):
+    """ Create a dictionary with 'x' and 'y' entries.
+
+    :param x: (int) x component of the vector.
+    :param y: (int) y component of the vector.
+    :return: A dictionary with 'x' and 'y' entries.
+    """
+
+    return dict(x=x, y=y)
 
 
-def make_rect(x, y, w, h, color=Color.black(), d=None):
-    if d is None:
-        o = dict(x=x, y=y, width=w, height=h, color=color)
-    else:
-        o = d
-        o['x'] = x
-        o['y'] = y
-        o['width'] = w
-        o['height'] = h
-        o['color'] = color
-    return o
+def make_rect(x, y, w, h, color=Color.black()):
+    """ Create a dictionary with the necessary information to draw a rect with pygame.
+
+    :param x: X position of the rect.
+    :param y: Y position of the rect.
+    :param w: Width of the rect.
+    :param h: Height of the rect.
+    :param color: Color of the rect.
+    :return: A dictionary with 'x', 'y', 'width', 'height' and 'color' entries.
+    """
+
+    return dict(x=x, y=y, width=w, height=h, color=color)
 
 
-def make_circle(x, y, r, color=Color.black(), d=None):
-    if d is None:
-        o = dict(x=x, y=y, radius=r, color=color)
-    else:
-        o = d
-        o['x'] = x
-        o['y'] = y
-        o['radius'] = r
-        o['color'] = color
-    return o
+def make_circle(x, y, r, color=Color.black()):
+    """ Create a dictionary with the necessary information to draw a circle with pygame.
+
+    :param x: X position of the circle.
+    :param y: Y position of the circle.
+    :param r: Radius of the circle.
+    :param color: Color of the circle.
+    :return: A dictionary with 'x', 'y', 'radius' and 'color' entries.
+    """
+
+    return dict(x=x, y=y, radius=r, color=color)
 
 
 def draw_rect(o):
+    """ Draw a rect on screen.
+
+    Uses the given dictionary to draw a rect with pygame.
+
+    :param o: A dictionary with 'x', 'y', 'width', 'height' and 'color' entries.
+    """
+
     pygame.draw.rect(screen, o['color'], (int(o['x']), int(o['y']), int(o['width']), int(o['height'])))
 
 
 def draw_circle(o):
+    """ Draw a circle on screen.
+
+    Uses the given dictionary to draw a rect with pygame.
+
+    :param o: A dictionary with 'x', 'y', 'radius' and 'color' entries.
+    """
+
     pygame.draw.circle(screen, o['color'], (int(o['x']), int(o['y'])), int(o['radius']))
 
 
 def rect_circle_are_touching(r, c):
+    """ Test if a rect and circle are touching.
+
+    :param r: Dictionary with rect values.
+    :param c: Dictionary with circle values.
+    :return: A boolean value whether or not the rect and circle are touching and a vector2 dictionary representing
+    the normal of the collision.
+    """
+
     if c['x'] + c['radius'] > r['x'] and c['y'] + c['radius'] > r['y'] \
             and c['x'] - c['radius'] < r['x'] + r['width'] and c['y'] - c['radius'] < r['y'] + r['height']:
         if c['x'] < r['x']:
@@ -100,18 +125,44 @@ def rect_circle_are_touching(r, c):
 
 
 def vector2_difference(v1, v2):
+    """ Subtract two vector dictionaries.
+
+    :param v1: (dict) Base vector.
+    :param v2: (dict) Subtract vector.
+    :return: A new vector dictionary of the subtracted vectors.
+    """
+
     return make_vector2(v1['x']-v2['x'], v1['y']-v2['y'])
 
 
 def vector2_add(v1, v2):
+    """ Add two vector dictionaries.
+
+    :param v1: (dict) Base vector.
+    :param v2: (dict) Add vector.
+    :return: A new vector dictionary of the added vectors.
+    """
+
     return make_vector2(v1['x']+v2['x'], v1['y']+v2['y'])
 
 
 def vector2_magnitude(v):
+    """ Calculate the magnitude of the vector dictionary.
+
+    :param v: (dict) Vector dictionary.
+    :return: (float) The magnitude of the vector.
+    """
+
     return math.sqrt(v['x']*v['x'] + v['y']*v['y'])
 
 
 def vector2_normalize(v):
+    """
+
+    :param v:
+    :return:
+    """
+
     magnitude = vector2_magnitude(v)
     if magnitude == 0:
         return make_vector2(0, 0)
@@ -119,6 +170,12 @@ def vector2_normalize(v):
 
 
 def hit_test_ball(b):
+    """
+
+    :param b:
+    :return:
+    """
+
     global ball_direction
     hit = rect_circle_are_touching(b, ball)
     if hit[0]:
@@ -130,6 +187,12 @@ def hit_test_ball(b):
 
 
 def damage_hittable_block(b):
+    """
+
+    :param b:
+    :return:
+    """
+
     if b['color'] == Color.red():
         b['color'] = Color.blue()
     elif b['color'] == Color.blue():
@@ -140,6 +203,14 @@ def damage_hittable_block(b):
 
 
 def render_text(s, x, y, clr=Color.white()):
+    """ Render text on screen.
+
+    :param s: (string) The text to draw.
+    :param x: (int) Center x of the rendered text.
+    :param y: (int) Center y of the rendered text.
+    :param clr: (tuple) Color of the rendered text.
+    """
+
     r_text = main_font.render(s, True, clr)
     r_text_rect = r_text.get_rect()
     r_text_rect.centerx = x
@@ -148,6 +219,13 @@ def render_text(s, x, y, clr=Color.white()):
 
 
 def generate_blocks():
+    """ Generate a list of drawable blocks
+
+    Generates a grid of drawable blocks for the breaker game.
+
+    :return: (list) The generated blocks in dictionary form.
+    """
+
     list = []
 
     hittable_columns = 5
