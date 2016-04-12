@@ -129,12 +129,23 @@ def hit_test_ball(b):
     return False
 
 
+def damage_hittable_block(b):
+    if b['color'] == Color.red():
+        b['color'] = Color.blue()
+    elif b['color'] == Color.blue():
+        b['color'] = Color.green()
+    elif b['color'] == Color.green():
+        return True
+    return False
+
+ball_radius = 10
+ball_start_pos = make_vector2(GameWidth/2, GameHeight/2)
 paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25, Color.red())
-ball = make_circle(GameWidth/2, GameHeight/2, 10, Color.blue())
+ball = make_circle(ball_start_pos['x'], ball_start_pos['y'], ball_radius, Color.blue())
 
 paddle_speed = 200.0
 paddle_direction = 0
-ball_direction = make_vector2(0, 1)
+ball_direction = make_vector2(0, 0)
 ball_speed = 200.0
 
 left_down = False
@@ -146,11 +157,13 @@ delta_time = float(0)
 frame_count = 0
 
 # Bounds
-top_rect = make_rect(0, 0, GameWidth, 10)
-left_rect = make_rect(0, 0, 10, GameHeight)
-right_rect = make_rect(GameWidth - 10, 0, 10, GameHeight)
+top_rect = make_rect(0, 0, GameWidth, 30)
+left_rect = make_rect(0, 0, 30, GameHeight)
+right_rect = make_rect(GameWidth - 30, 0, 30, GameHeight)
 
 bound_rects = [top_rect, left_rect, right_rect]
+
+ball_count = 3
 
 hittable_list = []
 
@@ -189,17 +202,30 @@ while True:
     for b in bound_rects:
         draw_rect(b)
 
+    ball_ui_x = 45
+    ball_ui_y = 15
+    ball_diameter = ball_radius * 2
+    for b in range(ball_count):
+        pygame.draw.circle(screen, Color.white(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius+2)
+        pygame.draw.circle(screen, Color.blue(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius)
+
     paddle['x'] += paddle_direction * delta_time * paddle_speed
 
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
     ball['y'] += ball_direction['y'] * delta_time * ball_speed
+
+    if ball['y'] >= GameHeight or ball['y'] < 0 or ball['x'] > GameWidth or ball['x'] < 0:
+        ball_count -= 1
+        ball['x'] = ball_start_pos['x']
+        ball['y'] = ball_start_pos['y']
+        ball_direction = make_vector2(0, 0)
 
     for b in bound_rects:
         hit_test_ball(b)
 
     delete_list = []
     for h in hittable_list:
-        if hit_test_ball(h):
+        if hit_test_ball(h) and damage_hittable_block(h):
             delete_list.append(h)
 
     for d in delete_list:
@@ -227,6 +253,8 @@ while True:
             elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
                 paddle_direction = 0 if not right_down else 1
                 left_down = False
+            elif event.key == pygame.K_SPACE and ball_direction['x'] == 0 and ball_direction['y'] == 0:
+                ball_direction['y'] = 1
 
     pygame.display.update()
     clock.tick(FPS)
