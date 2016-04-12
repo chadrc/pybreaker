@@ -231,7 +231,9 @@ while True:
     if len(hittable_list) == 0:
         render_text("You Won!", GameWidth/2, GameHeight/2, Color.black())
 
-    paddle['x'] += paddle_direction * delta_time * paddle_speed
+    new_paddle_x = paddle['x'] + paddle_direction * delta_time * paddle_speed
+    if 30 < new_paddle_x and new_paddle_x + paddle['width'] < GameWidth-30:
+        paddle['x'] = new_paddle_x
 
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
     ball['y'] += ball_direction['y'] * delta_time * ball_speed
