@@ -138,9 +138,43 @@ def damage_hittable_block(b):
         return True
     return False
 
+
+def render_text(s, x, y, clr=Color.white()):
+    r_text = main_font.render(s, True, clr)
+    r_text_rect = r_text.get_rect()
+    r_text_rect.centerx = x
+    r_text_rect.centery = y
+    screen.blit(r_text, r_text_rect)
+
+
+def generate_blocks():
+    list = []
+
+    hittable_columns = 5
+    hittable_rows = 5
+    hittable_width = 75
+    hittable_height = 25
+    hittable_margin = 10
+
+    start_y = 100
+    start_x = GameWidth/2 - (hittable_columns * (hittable_width + hittable_margin))/2
+
+    for i in range(hittable_columns):
+        for j in range(hittable_rows):
+            r = make_rect(start_x + i * (hittable_width + hittable_margin),
+                          start_y + j * (hittable_height + hittable_margin),
+                          hittable_width,
+                          hittable_height,
+                          Color.red())
+            list.append(r)
+
+    return list
+
+main_font = pygame.font.SysFont(None, 40)
 ball_radius = 10
 ball_start_pos = make_vector2(GameWidth/2, GameHeight/2)
-paddle = make_rect(GameWidth/2-50, GameHeight-50, 100, 25, Color.red())
+paddle_start_pos = make_vector2(GameWidth/2-50, GameHeight-50)
+paddle = make_rect(paddle_start_pos['x'], paddle_start_pos['y'], 100, 25, Color.red())
 ball = make_circle(ball_start_pos['x'], ball_start_pos['y'], ball_radius, Color.blue())
 
 paddle_speed = 200.0
@@ -165,25 +199,7 @@ bound_rects = [top_rect, left_rect, right_rect]
 
 ball_count = 3
 
-hittable_list = []
-
-hittable_columns = 5
-hittable_rows = 5
-hittable_width = 75
-hittable_height = 25
-hittable_margin = 10
-
-start_y = 100
-start_x = GameWidth/2 - (hittable_columns * (hittable_width + hittable_margin))/2
-
-for i in range(hittable_columns):
-    for j in range(hittable_rows):
-        r = make_rect(start_x + i * (hittable_width + hittable_margin),
-                      start_y + j * (hittable_height + hittable_margin),
-                      hittable_width,
-                      hittable_height,
-                      Color.red())
-        hittable_list.append(r)
+hittable_list = generate_blocks()
 
 # Game Loop
 while True:
@@ -209,6 +225,12 @@ while True:
         pygame.draw.circle(screen, Color.white(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius+2)
         pygame.draw.circle(screen, Color.blue(), (ball_ui_x + b * (ball_diameter + 7), ball_ui_y), ball_radius)
 
+    if ball_count <= 0:
+        render_text("Game Over", GameWidth/2, GameHeight/2, Color.black())
+
+    if len(hittable_list) == 0:
+        render_text("You Won!", GameWidth/2, GameHeight/2, Color.black())
+
     paddle['x'] += paddle_direction * delta_time * paddle_speed
 
     ball['x'] += ball_direction['x'] * delta_time * ball_speed
@@ -216,9 +238,10 @@ while True:
 
     if ball['y'] >= GameHeight or ball['y'] < 0 or ball['x'] > GameWidth or ball['x'] < 0:
         ball_count -= 1
-        ball['x'] = ball_start_pos['x']
-        ball['y'] = ball_start_pos['y']
-        ball_direction = make_vector2(0, 0)
+        if ball_count > 0:
+            ball['x'] = ball_start_pos['x']
+            ball['y'] = ball_start_pos['y']
+            ball_direction = make_vector2(0, 0)
 
     for b in bound_rects:
         hit_test_ball(b)
@@ -255,6 +278,14 @@ while True:
                 left_down = False
             elif event.key == pygame.K_SPACE and ball_direction['x'] == 0 and ball_direction['y'] == 0:
                 ball_direction['y'] = 1
+            elif event.key == pygame.K_r and (ball_count <= 0 or len(hittable_list) == 0):
+                ball_count = 3
+                ball['x'] = ball_start_pos['x']
+                ball['y'] = ball_start_pos['y']
+                ball_direction = make_vector2(0, 0)
+                paddle['x'] = paddle_start_pos['x']
+                paddle['y'] = paddle_start_pos['y']
+                hittable_list = generate_blocks()
 
     pygame.display.update()
     clock.tick(FPS)
